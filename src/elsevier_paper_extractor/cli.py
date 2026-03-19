@@ -34,6 +34,16 @@ def build_parser() -> argparse.ArgumentParser:
     xml_parser.add_argument("--end", type=int, default=None, help="End index for DOI slicing.")
     xml_parser.add_argument("--delay", type=float, default=0.2, help="Delay between requests in seconds.")
 
+    all_parser = subparsers.add_parser("run-all", help="Search first, then download XML files from the search result.")
+    all_parser.add_argument("--query", default=DEFAULT_QUERY, help="Scopus query string.")
+    all_parser.add_argument("--count", type=int, default=25, help="Records per API request.")
+    all_parser.add_argument("--max-records", type=int, default=200, help="Maximum records to save.")
+    all_parser.add_argument("--search-output-dir", default="scopus_dump", help="Directory for CSV and JSONL outputs.")
+    all_parser.add_argument("--xml-output-dir", default="papers_xml", help="Directory for XML files.")
+    all_parser.add_argument("--start", type=int, default=0, help="Start index for DOI slicing.")
+    all_parser.add_argument("--end", type=int, default=None, help="End index for DOI slicing.")
+    all_parser.add_argument("--delay", type=float, default=0.2, help="Delay between requests in seconds.")
+
     return parser
 
 
@@ -63,6 +73,29 @@ def main() -> None:
             delay_seconds=args.delay,
         )
         print(f"[DONE] downloaded {len(downloaded)} XML files into {args.output_dir}")
+        return
+
+    if args.command == "run-all":
+        search_output_dir = Path(args.search_output_dir)
+        rows = client.scopus_search_all(
+            args.query,
+            count=args.count,
+            max_records=args.max_records,
+        )
+        save_jsonl(search_output_dir / "scopus_search.jsonl", rows)
+        csv_path = search_output_dir / "scopus_search.csv"
+        save_csv(csv_path, rows)
+        downloaded = client.download_xml_from_csv(
+            csv_path,
+            args.xml_output_dir,
+            start=args.start,
+            end=args.end,
+            delay_seconds=args.delay,
+        )
+        print(
+            f"[DONE] saved {len(rows)} records to {search_output_dir} and downloaded "
+            f"{len(downloaded)} XML files into {args.xml_output_dir}"
+        )
         return
 
     raise RuntimeError(f"Unknown command: {args.command}")

@@ -10,8 +10,12 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
   "pandas>=2.0",
+  "python-dotenv>=1.0",
   "requests>=2.31",
 ]
+
+[project.scripts]
+elsevier-extractor = "elsevier_paper_extractor.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

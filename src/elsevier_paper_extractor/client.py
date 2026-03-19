@@ -9,6 +9,7 @@ from typing import Any
 
 import pandas as pd
 import requests
+from dotenv import load_dotenv
 
 BASE_URL = "https://api.elsevier.com"
 SEARCH_URL = f"{BASE_URL}/content/search/scopus"
@@ -16,10 +17,13 @@ SEARCH_URL = f"{BASE_URL}/content/search/scopus"
 
 class ElsevierClient:
     def __init__(self, api_key: str | None = None, inst_token: str | None = None) -> None:
+        load_dotenv()
         self.api_key = api_key or os.getenv("ELSEVIER_API_KEY")
         self.inst_token = inst_token or os.getenv("ELSEVIER_INST_TOKEN")
         if not self.api_key:
-            raise RuntimeError("Missing ELSEVIER_API_KEY environment variable.")
+            raise RuntimeError(
+                "Missing ELSEVIER_API_KEY. Add it to a .env file or export it in your shell."
+            )
 
     @property
     def json_headers(self) -> dict[str, str]:
